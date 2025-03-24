@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Image Detector</title>
+    <style>
+        :root {
+            --hot-pink: #FF1E8C;
+            --bright-purple: #8C1EFF;
+            --electric-blue: #1E8CFF;
+            --neon-green: #1EFF8C;
+            --bright-yellow: #FFE81E;
+            --vibrant-orange: #FF8C1E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 2rem;
+            background: linear-gradient(
+                45deg, 
+                var(--hot-pink), 
+                var(--bright-purple),
+                var(--electric-blue)
+            );
+            animation: gradientBG 15s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 3px 3px 0px var(--hot-pink);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: white;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 4px solid var(--neon-green);
+            animation: borderGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            from { border-color: var(--neon-green); }
+            to { border-color: var(--bright-yellow); }
+        }
+
+        .upload-area {
+            border: 3px dashed var(--electric-blue);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .upload-area:hover {
+            transform: translateY(-5px);
+            border-color: var(--hot-pink);
+            background: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .button {
+            background: linear-gradient(45deg, var(--hot-pink), var(--bright-purple));
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 3rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 2rem;
+        }
+
+        .button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, var(--bright-purple), var(--electric-blue));
+        }
+
+        .result-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+            border: 4px solid var(--vibrant-orange);
+            animation: resultGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes resultGlow {
+            from { box-shadow: 0 0 20px var(--vibrant-orange); }
+            to { box-shadow: 0 0 40px var(--hot-pink); }
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-heading {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--hot-pink);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .confidence-bar {
+            background: rgba(255, 255, 255, 0.5);
+            height: 2rem;
+            border-radius: 2rem;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--electric-blue);
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, 
+                var(--neon-green), 
+                var(--bright-yellow), 
+                var(--vibrant-orange)
+            );
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-text {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            color: var(--bright-purple);
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .title { font-size: 2.5rem; }
+            .upload-container, .result-container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">✨ Deepfake Detector ✨</h1>
+            <p class="subtitle">Upload your image in and let the magic happen!</p>
+        </header>
+
+        <main>
+            <div class="upload-container">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎨</div>
+                    <p style="font-size: 1.2rem; color: var(--bright-purple); margin-bottom: 1rem;">
+                        Drop your image (jpg) here  or click to explore!
+                    </p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none">
+                    <button class="button">Select Image</button>
+                </div>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <h2 class="result-heading">✨ Analysis Result</h2>
+                <img id="previewImage" class="preview-image" alt="Uploaded image preview">
+                <p style="font-size: 1.2rem; color: var(--electric-blue);">Magic Meter:</p>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceFill"></div>
+                </div>
+                <p class="result-text" id="resultText"></p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const resultContainer = document.getElementById('resultContainer');
+        const previewImage = document.getElementById('previewImage');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const resultText = document.getElementById('resultText');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.transform = 'scale(1.02)';
+            uploadArea.style.borderColor = 'var(--neon-green)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.transform = 'scale(1)';
+            uploadArea.style.borderColor = 'var(--electric-blue)';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.transform = 'scale(1)';
+            uploadArea.style.borderColor = 'var(--electric-blue)';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImage(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleImage(file);
+        });
+
+        function handleImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+        
+            // Show loading state
+            resultContainer.style.display = 'block';
+            confidenceFill.style.width = '0%';
+            resultText.textContent = '✨ Analyzing the magic... ✨';
+        
+            // Display preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        
+            // Make API call to backend
+            fetch('http://localhost:5500/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    resultText.textContent = `Error: ${data.error}`;
+                    return;
+                }
+        
+                confidenceFill.style.width = `${data.confidence}%`;
+                resultText.textContent = data.is_deepfake 
+                    ? `✨ This image appears to be enhanced by digital magic! (${data.confidence.toFixed(1)}% sure) ✨`
+                    : `✨ This image seems to be naturally magical! (${data.confidence.toFixed(1)}% sure) ✨`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultText.textContent = `Error: ${error.message}`;
+                confidenceFill.style.width = '0%';
+            });
+        }
+
+        function simulateAnalysis() {
+            resultContainer.style.display = 'block';
+            confidenceFill.style.width = '0%';
+            resultText.textContent = '✨ Analyzing the magic... ✨';
+
+            setTimeout(() => {
+                const isDeepfake = Math.random() > 0.5;
+                const confidence = Math.random() * 30 + 70;
+                
+                confidenceFill.style.width = confidence + '%';
+                resultText.textContent = isDeepfake 
+                    ? `✨ This image appears to be enhanced by digital magic! (${confidence.toFixed(1)}% sure) ✨`
+                    : `✨ This image seems to be naturally magical! (${confidence.toFixed(1)}% sure) ✨`;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
