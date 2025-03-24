@@ -1,0 +1,6 @@
+📂 project-root/
+├── 📂 frontend/        # Frontend source code ( HTML, CSS, JavaScript, etc.)
+├── 📂 backend/         # Backend source code ( Flask)
+├── 📜 df.ipynb         # Jupyter Notebook for data processing or analysis
+├── 📜 README.md        # Project documentation
+└── 📜 .gitignore       # Ignored files and directories
